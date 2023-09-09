@@ -7,5 +7,5 @@
 		"core": "none"
 	},
 	"enableShowLog": false,
-	"device": "none"
+	"device": "xc7a35tftg256-1"
 }
