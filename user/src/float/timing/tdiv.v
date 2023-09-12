@@ -26,11 +26,15 @@ module tdiv #(
         output [2:0]       flag
     );
 
-    wire 	        signA, signB;
-    wire [EXP-1:0]	expoA, expoB;
-    wire [FRA:0]	fracA, fracB;
-    wire            M_unpack_A_tvalid;
-    wire            M_unpack_B_tvalid;
+    localparam SUB_NORMAL = 3'b001;
+    localparam INFINITY   = 3'b010;
+    localparam NORMAL     = 3'b100;
+
+    wire 	         signA, signB;
+    wire [EXP-1:0]	 expoA, expoB;
+    wire [FRA:0]	 fracA, fracB;
+    wire             M_unpack_A_tvalid;
+    wire             M_unpack_B_tvalid;
 
     //disassemble for each part of the floating point number
     //One clock cycles are consumed
@@ -58,101 +62,131 @@ module tdiv #(
         .M_B_tvalid     (M_unpack_B_tvalid)
     );//one
 
-    reg              r_sign;
-    reg              d_sign;
-    reg              sign;
+    reg                     r_sign;
+    reg                     d_sign;
+    reg                     sign;
 
-    reg  [EXP:0]     r_iexpo;
-    reg  [EXP-1:0]   iexpo;
+    reg  signed [EXP:0]     r_iexpo;
+    reg  signed [EXP-1:0]   d_iexpo;
+    reg  signed [EXP-1:0]   iexpo;
 
-    wire [2*FRA+1:0] fraction;
-    reg  [FRA+1:0]   r_ifrac;
-    reg  [FRA:0]     ifrac;
+    reg         [2*FRA+1:0] fraction;
+    reg         [2*FRA+1:0] r_fracA;
+    reg         [FRA:0]     r_fracB;
 
-    reg              r_S_normal_valid;
-    reg              S_normal_valid;
+    reg         [FRA+1:0]   d_ifrac;
+    reg         [FRA:0]     ifrac;
 
-    assign fraction = {fracA,{(FRA+1){1'b0}}};
+    reg         [2:0]       state;
+    reg         [2:0]       d_state;
 
+    reg                     r_normal_valid;
+    reg                     normal_valid;
+
+    /*second cycle*/
+    //Exponential subtraction
     always @(posedge aclk or posedge aresetn) begin
         if(aresetn)begin
-            r_sign           <= 1'b0;
-            r_iexpo          <= 1'b0;
-            r_ifrac          <= 1'b0;
-            r_S_normal_valid <= 1'b0;
+            r_sign         <= 1'b0;
+            r_iexpo        <= 1'b0;
+            r_fracA        <= 1'b0;
+            r_fracB        <= 1'b0;
+            r_normal_valid <= 1'b0;
         end
         else begin
-            r_S_normal_valid <= M_unpack_A_tvalid && M_unpack_B_tvalid;
-            //whether A is infinitely small
-            if(expoA == {(EXP){1'b0}})begin
-                //A:small B:small output:big
-                if(expoB == {(EXP){1'b0}})begin
-                    r_sign  <= signA ^ signB;
-                    r_iexpo <= 2**EXP - 1'b1;
-                    r_ifrac <= {1'b1,{(FRA+1){1'b0}}};
-                end
-                //A:small B:other output:small
-                else begin
-                    r_sign  <= 1'b0;
-                    r_iexpo <= 1'b0;
-                    r_ifrac <= 1'b0;
-                end
-            end
-            //A:big B:big output:big
-             else if(expoA == 2**EXP - 1)begin
-                 r_sign     <= signA ^ signB;
-                 r_iexpo    <= 2**EXP - 1'b1;
-                 r_ifrac    <= {1'b1,{(FRA+1){1'b0}}};
-             end
-             //B:small output: big
-             else if(expoB == {(EXP){1'b0}})begin
-                 r_sign     <= signA ^ signB;
-                 r_iexpo    <= 2**EXP - 1'b1;
-                 r_ifrac <= {1'b1,{(FRA+1){1'b0}}};
-             end
-             //B:big output: small
-             else if(expoB == 2**EXP - 1)begin
-                 r_sign     <= 1'b0;
-                 r_iexpo    <= 1'b0;
-                 r_ifrac    <= 1'b0;
-             end
-             else begin
-                 r_sign     <= signA ^ signB;
-                 r_iexpo    <= expoA - expoB;
-                 r_ifrac    <= fraction/fracB;
-             end
+            r_sign         <= signA ^ signB;
+            r_iexpo        <= $signed({1'b0,expoA}) - $signed({1'b0,expoB});
+            r_fracA        <= {fracA,{(FRA+1){1'b0}}};
+            r_fracB        <= fracB;
+            r_normal_valid <= M_unpack_A_tvalid & M_unpack_B_tvalid;
         end
     end
 
-    always @(posedge aclk or posedge aresetn) begin
+    //Status judgment
+    always @(*) begin
         if(aresetn)begin
-            d_sign         <= 1'b0;
-            iexpo          <= 1'b0;
-            ifrac          <= 1'b0;
-            S_normal_valid <= 1'b0;
+            state    <= NORMAL;
+            fraction <= 1'b0;
+        end
+        else if($signed(r_iexpo) + 2**(EXP-1) < 1)begin
+            state    <= SUB_NORMAL;
+            fraction <= r_fracA >> (2 - $signed(r_iexpo) - 2**(EXP-1) + 1);
+        end
+        else if($signed(r_iexpo) >= 31)begin
+            state    <= INFINITY;
+            fraction <= 1'b0;
         end
         else begin
-            S_normal_valid <= r_S_normal_valid;
-            if(r_iexpo + 2**(EXP-1) <= 1)begin
-                d_sign     <= 1'b0;
-                iexpo      <= 1'b0;
-                ifrac      <= 1'b0;
-            end
-            else begin
-                d_sign     <= r_sign;
-                iexpo      <= r_iexpo + (2**(EXP-1)-1);
-                if(r_ifrac[0])begin
-                    ifrac  <= r_ifrac[FRA + 1 : 1] + 1'b1;
-                end
-                else begin
-                    ifrac  <= r_ifrac[FRA + 1 : 1];
-                end
-            end
+            state    <= NORMAL;
+            fraction <= r_fracA;
         end
     end
 
+    /*third cycle*/
+    //Subtracting mantissa
     always @(posedge aclk) begin
-        sign    <= d_sign;
+        d_sign       <= r_sign;
+        d_ifrac      <= fraction/r_fracB;
+        d_state      <= state;
+        normal_valid <= r_normal_valid;
+        case(state)
+            NORMAL:begin
+                d_iexpo <= r_iexpo + 2**(EXP-1) - 1'b1;
+            end
+            SUB_NORMAL:begin
+                d_iexpo <= 1'b0;
+            end
+            INFINITY:begin
+                d_iexpo <= 2**(EXP-1) - 1'b1;
+            end
+            default:begin
+                d_iexpo <= 1'b0;
+            end
+        endcase
+    end
+
+    always @(*) begin
+        case(d_state)
+            NORMAL:begin
+                iexpo <= d_iexpo;
+                if(d_ifrac[0])
+                    ifrac <= d_ifrac[FRA+1:1] + 1'b1;
+                else 
+                    ifrac <= d_ifrac[FRA+1:1];
+            end
+            SUB_NORMAL:begin
+                iexpo <= d_iexpo;
+                if(d_ifrac[0])begin
+                    if(d_ifrac[FRA])begin
+                        ifrac <= d_ifrac[FRA:0] + 1'b1;
+                    end
+                    else begin
+                        ifrac <= {~d_ifrac[FRA],d_ifrac[FRA-1:0]} + 1'b1;
+                    end
+                end
+                else begin
+                    if(d_ifrac[FRA])begin
+                        ifrac <= d_ifrac[FRA:0];
+                    end
+                    else begin
+                        ifrac <= {~d_ifrac[FRA],d_ifrac[FRA-1:0]};
+                    end
+                end
+            end
+            INFINITY:begin
+                iexpo <= d_iexpo;
+                ifrac <= {1'b1,d_ifrac[FRA:1]};
+            end
+            default:begin
+                iexpo <= 1'b0;
+                ifrac <= 1'b0;
+            end
+        endcase
+    end
+
+    //fourth cycle
+    always @(posedge aclk) begin
+        sign <= d_sign;
     end
 
     wire [FRA - 1 : 0] ofrac;
@@ -168,7 +202,7 @@ module tdiv #(
 
         .iexpo          (iexpo),
         .ifrac          (ifrac),
-        .S_tvalid       (S_normal_valid),
+        .S_tvalid       (normal_valid),
 
         .oexpo          (oexpo),
         .ofrac          (ofrac),
@@ -196,8 +230,8 @@ module tdiv #(
         .frac 		( ofrac 	         )
     );
 
-    assign s_axis_a_tready = s_axis_a_tvalid;
-    assign s_axis_b_tready = s_axis_b_tvalid;
+    assign s_axis_a_tready      = s_axis_a_tvalid;
+    assign s_axis_b_tready      = s_axis_b_tvalid;
     assign m_axis_result_tvalid = M_normal_valid;
 
 endmodule
