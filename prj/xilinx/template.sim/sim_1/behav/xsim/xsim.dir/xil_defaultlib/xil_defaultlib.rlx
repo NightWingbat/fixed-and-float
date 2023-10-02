@@ -3,6 +3,11 @@
 Dec  7 2018
 00:33:28
 e:/fpga/project/fixed-and-float/fixed-and-float/prj/xilinx/template.sim/sim_1/behav/xsim/glbl.v,1544155481,verilog,,,,glbl,,,,,,,,
-e:/fpga/project/fixed-and-float/fixed-and-float/user/sim/float/tdiv_tb.v,1694227542,verilog,,,,div_tb,,,,,,,,
-e:/fpga/project/fixed-and-float/fixed-and-float/user/src/float/timing/tdiv.v,1694449894,verilog,,e:/fpga/project/fixed-and-float/fixed-and-float/user/src/float/utils/utils.v,,tdiv,,,,,,,,
+e:/fpga/project/fixed-and-float/fixed-and-float/user/sim/fixed/testbench.v,1694773667,verilog,,,,testbench,,,,,,,,
+e:/fpga/project/fixed-and-float/fixed-and-float/user/sim/float/fdiv_tb.v,1694652620,verilog,,,,fdiv_tb,,,,,,,,
+e:/fpga/project/fixed-and-float/fixed-and-float/user/sim/float/tdiv_tb.v,1694849212,verilog,,,,tdiv_tb,,,,,,,,
+e:/fpga/project/fixed-and-float/fixed-and-float/user/src/fixed/div.v,1694774039,verilog,,e:/fpga/project/fixed-and-float/fixed-and-float/user/sim/fixed/testbench.v,,div,,,,,,,,
+e:/fpga/project/fixed-and-float/fixed-and-float/user/src/float/comb/cadd.v,1694227542,verilog,,,,cadd,,,,,,,,
+e:/fpga/project/fixed-and-float/fixed-and-float/user/src/float/timing/fdiv.v,1694653217,verilog,,e:/fpga/project/fixed-and-float/fixed-and-float/user/sim/float/fdiv_tb.v,,divider,,,,,,,,
+e:/fpga/project/fixed-and-float/fixed-and-float/user/src/float/timing/tdiv.v,1696268392,verilog,,e:/fpga/project/fixed-and-float/fixed-and-float/user/sim/float/tdiv_tb.v,e:/fpga/project/fixed-and-float/fixed-and-float/user/src/float/comb/cadd.v,tdiv,,,,,,,,
 e:/fpga/project/fixed-and-float/fixed-and-float/user/src/float/utils/utils.v,1694227542,verilog,,e:/fpga/project/fixed-and-float/fixed-and-float/user/sim/float/tdiv_tb.v,,cksp;normal;normal_mult;normal_sequential;normal_tmult;pack;pairStep;pairStep_sequential;unpack;unpack_sequential,,,,,,,,

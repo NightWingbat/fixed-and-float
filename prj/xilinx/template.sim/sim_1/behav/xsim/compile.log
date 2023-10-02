@@ -1,0 +1,4 @@
+INFO: [VRFC 10-2263] Analyzing Verilog file "e:/fpga/project/fixed-and-float/fixed-and-float/user/src/float/timing/tdiv.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module tdiv
+INFO: [VRFC 10-2263] Analyzing Verilog file "e:/fpga/project/fixed-and-float/fixed-and-float/user/sim/float/tdiv_tb.v" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module tdiv_tb

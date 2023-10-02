@@ -1,7 +1,14 @@
 Vivado Simulator 2018.3
 Copyright 1986-1999, 2001-2018 Xilinx, Inc. All Rights Reserved.
-Running: D:/Vivado/position2/Vivado/2018.3/bin/unwrapped/win64.o/xelab.exe -wto d1195c52b0ac4dee9bf1d45f7412a6c2 --incr --debug typical --relax --mt 8 -L xil_defaultlib -L unisims_ver -L unimacro_ver -L secureip --snapshot div_tb_behav xil_defaultlib.div_tb xil_defaultlib.glbl -log elaborate.log 
+Running: D:/Vivado/position2/Vivado/2018.3/bin/unwrapped/win64.o/xelab.exe -wto d1195c52b0ac4dee9bf1d45f7412a6c2 --incr --debug typical --relax --mt 8 -L xil_defaultlib -L unisims_ver -L unimacro_ver -L secureip --snapshot tdiv_tb_behav xil_defaultlib.tdiv_tb xil_defaultlib.glbl -log elaborate.log 
 Using 8 slave threads.
 Starting static elaboration
 Completed static elaboration
-INFO: [XSIM 43-4323] No Change in HDL. Linking previously generated obj files to create kernel
+Starting simulation data flow analysis
+WARNING: [XSIM 43-4100] "e:/fpga/project/fixed-and-float/fixed-and-float/prj/xilinx/template.sim/sim_1/behav/xsim/glbl.v" Line 6. Module glbl has a timescale but at least one module in design doesn't have timescale.
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling module xil_defaultlib.tdiv
+Compiling module xil_defaultlib.tdiv_tb
+Compiling module xil_defaultlib.glbl
+Built simulation snapshot tdiv_tb_behav
